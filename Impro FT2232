@@ -1,0 +1,197 @@
+#include<stdio.h>
+#include<windows.h>
+#include<conio.h>
+#include<string.h>
+#include "FTD2XX.H"	//FT2232 header
+
+void dectobin(int dec) {
+	//decimal to binary conversion
+	int dec, rem, bin = 0, i = 1;
+
+	while (dec != 0) {
+		rem = dec % 2;
+		dec = dec / 2;
+		bin = bin + (rem*i);
+		i = i * 10;
+	}
+}
+
+void reverse(int bin) {						//Reverse binary input (e.g. 1011 to 1101)
+	int bin, T, rem, base = 8, i, B[4];
+	while (bin > 0) {
+		for (i = 0; i < 4; i++) {
+			rem = bin % 10;
+			B[i] = rem;
+			T = T + B[i] * base;
+			bin = bin / 10;
+			base = base / 2;
+		}
+	}
+}
+
+void invert(int bin) {						//Inverts binary input (e.g. 1011 to 0100) 
+	int bin, T, rem, base = 1, i, B[4];
+	while (bin > 0) {
+		for (i = 0; i < 4; i++) {
+			rem = bin % 10;
+			B[i] = rem;
+			if (B[i] == 0)
+				B[i] = 1;
+			else
+				B[i] = 0;
+			T = T + B[i] * base;
+			bin = bin / 10;
+			base = base * 2;
+		}
+	}
+}
+
+int main() {
+	BYTE bInData;		//Input Data
+	BYTE bOutData;		//Output Data
+	DWORD dwWritten;	//Number of written byte (by the FT_write and then stored)
+	FT_HANDLE hFt;		//Handle of device
+	FT_STATUS status;	//Status of device
+
+	status = FT_Open(0, &hFt);		//Initialize status
+	FT_SetBitMode(hFt, 0xff, 1);	//Initialize device
+
+	int n = 0;
+	char putin[20];
+	char h[20];
+	char input[20];
+
+	printf("\n");
+	printf("Type A for Binary number\n");
+	printf("Type B for Decimal number\n");
+	printf("Type C for Hex number\n");
+	printf("Type D for Reverse Binary number\n");	
+	printf("Type E for Reverse Decimal number\n");
+	printf("Type F for Inverted Binary number\n");
+	printf("Type G for Inverted Decimal number\n");
+	printf("Type H to close application\n\n");
+	printf("Select mode from above: ");
+	scanf_s("%s", input, 20);
+
+	if (strcmp("A", input) == 0) {	
+		//Changes binary to decimal
+		int bin, T, rem, base = 1, i;
+
+		printf("X is either 0 or 1\n");
+		printf("Input desired binary number (bXXXX): b");
+		scanf_s("%d", &bin);
+
+		while (bin > 0) {						
+				rem = bin % 10;
+				T = T + rem * base;
+				bin = bin / 10;
+				base = base * 2;
+			}
+
+		bOutData = T;
+		status = FT_Write(hFt, &bOutData, 1, &dwWritten);	//Write data bit in device
+		_getch();
+	}
+
+	else if (strcmp("B", input) == 0) {
+		int dec;
+		// Decimal number from 00 - 15
+		printf("Input Decimal number (from 00 to 15): ");
+		scanf_s("%d", &dec);
+
+		bOutData = dec;
+		status = FT_Write(hFt, &bOutData, 1, &dwWritten);
+		_getch();
+	}
+
+	else if (strcmp("C", input) == 0) {
+		unsigned H;
+		// Hex number if from 0-9 and A-H
+		printf("H is from 0-9 or A-F\n");
+		printf("Input Hex number (0xH): 0x");
+		scanf_s("%x", &H);
+
+		bOutData = H;
+		status = FT_Write(hFt, &bOutData, 1, &dwWritten);
+		_getch();
+	}
+
+	else if (strcmp("D", input) == 0) {
+		//Reverse Binary number
+		//Example: Input is 1011 and the output will be 1101
+		int bin, T;
+
+		printf("The binary input will be reversed or read backwards\n");
+		printf("X is either 0 or 1\n");
+		printf("Input binary number to be reversed (bXXXX): b");
+		scanf_s("%d", &bin);
+
+		reverse(bin);
+		bOutData = T;
+		status = FT_Write(hFt, &bOutData, 1, &dwWritten);	//Write data bit in device
+		_getch();
+	}
+
+	else if (strcmp("E", input) == 0) {
+		//Reverse Decimal number
+		//Example: Input is 11 and the output will be 13
+		int dec, bin, T;
+
+		printf("Input Decimal number to be reversed (from 00 to 15): ");
+		scanf_s("%d", &dec);
+
+		dectobin(dec);
+		reverse(bin);
+		bOutData = T;
+		status = FT_Write(hFt, &bOutData, 1, &dwWritten);	//Write data bit in device
+		_getch();
+	}
+
+	else if (strcmp("F", input) == 0) {
+		//Inverted Binary number
+		//Example: Input is 1011 and the output will be 0100
+		int bin, T;
+		printf("The binary input will be inverted where 0 becomes 1 and vice versa.\n");
+		printf("X is either 0 or 1\n");
+		printf("Input binary number to be reversed (bXXXX): b");
+		scanf_s("%d", &bin);
+
+		invert(bin);
+		bOutData = T;
+		status = FT_Write(hFt, &bOutData, 1, &dwWritten);	//Write data bit in device
+		_getch();
+	}
+
+	else if (strcmp("G", input) == 0) {
+		//Inverted Decimal number
+		//Example: Input is 11 and the output will be 4
+		int dec, bin, T;
+		printf("Input Decimal number to be inverted (from 00 to 15): ");
+		scanf_s("%d", &dec);
+
+		dectobin(dec);
+		invert(bin);
+		bOutData = T;
+		status = FT_Write(hFt, &bOutData, 1, &dwWritten);	//Write data bit in device
+		_getch();
+	}
+
+	//Close application
+	else if (strcmp("H", input) == 0) {
+		status = FT_ResetDevice(hFt);		//Reset Device
+		FT_Close(hFt);						//Closes device
+		_getch();
+		return 0;
+	}
+	//error
+	else if (strcmp("1", input) != 0 && strcmp("A", input) != 0 && strcmp("B", input) != 0 && strcmp("C", input) != 0 && strcmp("D", input) != 0 && strcmp("E", input) != 0 && strcmp("F", input) != 0 && strcmp("G", input) != 0 && strcmp("H", input) != 0) {
+		printf("Please input the correct commmand key\n");
+		_getch();
+	}
+
+	status = FT_ResetDevice(hFt);		//Reset Device
+	FT_Close(hFt);
+
+	_getch();
+	main();
+}
