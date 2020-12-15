@@ -1,0 +1,88 @@
+#include<stdio.h>
+#include<windows.h>
+#include<conio.h>
+#include<string.h>
+#include "FTD2XX.H"	//FT2232 header
+
+int main() {
+	BYTE bInData;		//Input Data
+	BYTE bOutData;		//Output Data
+	DWORD dwWritten;	//Number of written byte (by the FT_write and then stored)
+	FT_HANDLE hFt;		//Handle of device
+	FT_STATUS status;	//Status of device
+
+	status = FT_Open(0, &hFt);		//Initialize status
+	FT_SetBitMode(hFt, 0xff, 1);	//Initialize device
+
+	int n = 0;
+	char putin[20];
+	char h[20];
+	char input[20];
+
+	printf("\n");
+	printf("Type A for Binary number\n");
+	printf("Type B for Decimal number\n");
+	printf("Type C for Hex number\n");
+	printf("Type D to close application\n");
+	printf("Select mode from above: ");
+	scanf_s("%s", input, 20);
+
+	if (strcmp("A", input) == 0) {
+		int bin, b1, b2, b3, b4, T;
+
+		printf("X is either 0 or 1\n");
+		printf("Input desired binary number (bXXXX): b");
+		scanf_s("%d", &bin);
+
+		b1 = bin / 1000 % 10;
+		b2 = bin / 100 % 10;
+		b3 = bin / 10 % 10;
+		b4 = bin % 10;
+
+		T = b1 * 8 + b2 * 4 + b3 * 2 + b4 * 1;		//Change binary to decimal 
+		
+		bOutData = T;
+		status = FT_Write(hFt, &bOutData, 1, &dwWritten);	//Write data bit in device
+		_getch();
+	}
+
+	else if (strcmp("B", input) == 0) {
+		int dec;
+		// Decimal number from 00 - 15
+		printf("Input Decimal number (from 00 to 15): ");
+		scanf_s("%d", &dec);
+		
+		bOutData = dec;
+		status = FT_Write(hFt, &bOutData, 1, &dwWritten);
+		_getch();
+	}
+
+	else if (strcmp("C", input) == 0) {
+		unsigned H;
+		// Hex number if from 0-9 and A-H
+		printf("H is from 0-9 or A-F\n");
+		printf("Input Hex number (0xH): 0x");
+		scanf_s("%x", &H);
+	
+		bOutData = H;
+		status = FT_Write(hFt, &bOutData, 1, &dwWritten);
+		_getch();
+	}
+
+	//Close application
+	else if (strcmp("D", input) == 0) {
+		status = FT_ResetDevice(hFt);		//Reset Device
+		FT_Close(hFt);						//Closes device
+		_getch();
+		return 0;
+	}
+	//error
+	else if (strcmp("1", input) != 0 && strcmp("A", input) != 0 && strcmp("B", input) != 0 && strcmp("C", input) != 0 && strcmp("", input) != 0) {
+		printf("Please input the correct commmand key\n");
+		_getch();
+	}
+	
+	status = FT_ResetDevice(hFt);		//Reset Device
+	FT_Close(hFt);
+	main();
+}
